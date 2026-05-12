@@ -11,13 +11,19 @@ Desktop.ini
 *~
 push.bat
 
+# History files
+.history/
+
+# Typora generated files
+[README.md]*
+
 # Node
 node_modules/
 
 # Build artifacts
 dist/
 
-# Typora resources (don't track the installed copy)
+# Typora resources
 Typora/
 
 # Temporary
