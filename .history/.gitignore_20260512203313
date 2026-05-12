@@ -1,0 +1,26 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+push
+
+# Node
+node_modules/
+
+# Build artifacts
+dist/
+
+# Typora resources (don't track the installed copy)
+Typora/
+
+# Temporary
+*.tmp
+*.bak
+*.log
