@@ -14,8 +14,10 @@ push.bat
 # History files
 .history/
 
-# Typora generated files
-[README.md]*
+# Local agent/runtime state
+.claude/
+.playwright-mcp/
+.codex/
 
 # Node
 node_modules/
@@ -26,7 +28,15 @@ dist/
 # Typora resources
 Typora/
 
-# Temporary
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# Temporary and backups
 *.tmp
 *.bak
+*.backup
+*.backup.*
+*.orig
 *.log

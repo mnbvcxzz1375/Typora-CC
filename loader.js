@@ -35,6 +35,11 @@
     const MODULES = [
         'plugin/context.js',
         'plugin/llm.js',
+        'plugin/media.js',
+        'plugin/features.js',
+        'plugin/history.js',
+        'plugin/skills.js',
+        'plugin/tools.js',
         'plugin/writing.js',
         'plugin/ui.js',
         'plugin/main.js'
@@ -63,6 +68,7 @@
     function loadCSS(href) {
         return new Promise((resolve) => {
             const link = document.createElement('link');
+            link.id = 'typora-gpt-css';
             link.rel = 'stylesheet';
             link.type = 'text/css';
             link.href = href;

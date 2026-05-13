@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Typora-GPT Unit Tests</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #e0e0f0; }
+        .pass { color: #4caf50; }
+        .fail { color: #f44336; }
+        .suite { color: #64b5f6; font-weight: bold; margin-top: 16px; font-size: 14px; }
+        .result { margin-left: 20px; font-size: 13px; }
+        h1 { color: #bb86fc; }
+        #summary { margin-top: 20px; padding: 10px; border-top: 1px solid #333; font-weight: bold; }
+        .async-tag { color: #ff9800; font-size: 10px; margin-left: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Typora-GPT Unit Tests</h1>
+    <div id="output"></div>
+    <div id="summary"></div>
+
+    <!-- Load plugin modules -->
+    <script src="../plugin/context.js"></script>
+    <script src="../plugin/llm.js"></script>
+    <script src="../plugin/features.js"></script>
+    <script src="../plugin/history.js"></script>
+    <script src="../plugin/skills.js"></script>
+    <script src="../plugin/writing.js"></script>
+
+    <script>
+    // Minimal test framework
+    const output = document.getElementById('output');
+    let totalPass = 0, totalFail = 0;
+
+    function suite(name) {
+        const el = document.createElement('div');
+        el.className = 'suite';
+        el.textContent = name;
+        output.appendChild(el);
+    }
+
+    function assert(condition, msg) {
+        const el = document.createElement('div');
+        el.className = 'result';
+        if (condition) {
+            totalPass++;
+            el.innerHTML = '<span class="pass">PASS</span> ' + msg;
+        } else {
+            totalFail++;
+            el.innerHTML = '<span class="fail">FAIL</span> ' + msg;
+        }
+        output.appendChild(el);
+    }
+
+    function assertEq(a, b, msg) {
+        assert(a === b, msg + ' (expected: ' + JSON.stringify(b) + ', got: ' + JSON.stringify(a) + ')');
+    }
+
+    function suiteAsync(name) {
+        const el = document.createElement('div');
+        el.className = 'suite';
+        el.textContent = name + ' ';
+        const tag = document.createElement('span');
+        tag.className = 'async-tag';
+        tag.textContent = '(async)';
+        el.appendChild(tag);
+        output.appendChild(el);
+    }
+
+    // ===== Synchronous Tests =====
+
+    suite('LLM: estimateTokens');
+    assertEq(LLMModule.estimateTokens(''), 0, 'Empty string = 0 tokens');
+    assert(LLMModule.estimateTokens('hello world') > 0, 'English text > 0 tokens');
+    assert(LLMModule.estimateTokens('你好世界') > 0, 'Chinese text > 0 tokens');
+    assert(LLMModule.estimateTokens('你好世界') >= 4, '4 Chinese chars >= 4 tokens');
+
+    suite('LLM: _normalizeEndpoint');
+    assertEq(LLMModule._normalizeEndpoint('https://api.openai.com/v1', 'openai'),
+        'https://api.openai.com/v1/chat/completions', '/v1 -> /v1/chat/completions');
+    assertEq(LLMModule._normalizeEndpoint('https://api.openai.com/v1/chat/completions', 'openai'),
+        'https://api.openai.com/v1/chat/completions', 'Already complete');
+    assertEq(LLMModule._normalizeEndpoint('https://api.example.com', 'openai'),
+        'https://api.example.com/v1/chat/completions', 'Base URL -> full path');
+    assertEq(LLMModule._normalizeEndpoint('https://api.anthropic.com/v1', 'anthropic'),
+        'https://api.anthropic.com/v1/messages', 'Anthropic /v1 -> /v1/messages');
+    assertEq(LLMModule._normalizeEndpoint('', 'openai'), '', 'Empty input');
+
+    suite('LLM: inferModelCapabilities');
+    const gpt4o = LLMModule.inferModelCapabilities('gpt-4o');
+    assertEq(gpt4o.vision, true, 'gpt-4o has vision');
+    assert(gpt4o.contextWindow >= 100000, 'gpt-4o context >= 100K');
+    const deepseek = LLMModule.inferModelCapabilities('deepseek-r1');
+    assertEq(deepseek.vision, false, 'deepseek-r1 no vision');
+    const claude = LLMModule.inferModelCapabilities('claude-sonnet-4');
+    assertEq(claude.vision, true, 'claude-sonnet has vision');
+    const unknown = LLMModule.inferModelCapabilities('some-random-model');
+    assertEq(unknown.source, 'fallback', 'Unknown model uses fallback');
+
+    suite('LLM: _extractModelCaps');
+    const caps = LLMModule._extractModelCaps({ id: 'gpt-4o', context_window: 128000 });
+    assertEq(caps.id, 'gpt-4o', '_extractModelCaps returns id');
+    assertEq(caps.contextWindow, 128000, '_extractModelCaps uses API value');
+    const caps2 = LLMModule._extractModelCaps({ id: 'unknown-model' });
+    assertEq(caps2.source, 'fallback', 'Unknown model falls back');
+
+    suite('LLM: _formatTokens');
+    assertEq(LLMModule._formatTokens(0), 'auto', '0 tokens -> auto');
+    assertEq(LLMModule._formatTokens(500), '500', '500 tokens -> 500');
+    assertEq(LLMModule._formatTokens(1500), '2K', '1500 tokens -> 2K');
+    assertEq(LLMModule._formatTokens(1500000), '1.5M', '1.5M tokens -> 1.5M');
+
+    suite('Features: isCommandSafe');
+    assert(FeaturesModule.isCommandSafe('git status'), 'git status is safe');
+    assert(FeaturesModule.isCommandSafe('ls -la'), 'ls -la is safe');
+    assert(FeaturesModule.isCommandSafe('wc -l *.md'), 'wc is safe');
+    assert(!FeaturesModule.isCommandSafe('rm -rf /'), 'rm is not safe');
+    assert(!FeaturesModule.isCommandSafe('git push --force'), 'git push --force is not safe');
+
+    suite('Features: isCommandDangerous');
+    assert(FeaturesModule.isCommandDangerous('rm -rf /'), 'rm is dangerous');
+    assert(FeaturesModule.isCommandDangerous('git push'), 'git push is dangerous');
+    assert(FeaturesModule.isCommandDangerous('kill -9 1234'), 'kill is dangerous');
+    assert(!FeaturesModule.isCommandDangerous('git status'), 'git status is not dangerous');
+    assert(!FeaturesModule.isCommandDangerous('ls'), 'ls is not dangerous');
+
+    suite('Features: _cleanupStorage');
+    assert(typeof FeaturesModule._cleanupStorage === 'function', '_cleanupStorage exists');
+    assert(typeof FeaturesModule._checkStorageQuota === 'function', '_checkStorageQuota exists');
+
+    suite('Skills: addSkill / deleteSkill / getSkill');
+    const testSkill = SkillsModule.addSkill({ name: 'Test Skill', prompt: 'Test prompt' });
+    assert(testSkill.id !== undefined, 'addSkill returns id');
+    assert(testSkill.isCustom === true, 'addSkill marks as custom');
+    assert(SkillsModule.getSkill(testSkill.id) !== null, 'getSkill finds it');
+    SkillsModule.deleteSkill(testSkill.id);
+    assert(SkillsModule.getSkill(testSkill.id) === null, 'deleteSkill removes it');
+
+    suite('Skills: importFromFile');
+    const jsonContent = JSON.stringify([{ name: 'Imported Skill', prompt: 'Do something' }]);
+    const count = SkillsModule.importFromFile(jsonContent);
+    assertEq(count, 1, 'importFromFile returns 1');
+    const imported = SkillsModule._getCustom().find(s => s.name === 'Imported Skill');
+    assert(imported !== undefined, 'Imported skill exists');
+    SkillsModule.deleteSkill(imported.id);
+
+    suite('Skills: importMarkdownSkill');
+    const mdContent = '---\nname: Markdown Skill\ndescription: Test\n---\n\nDo something with markdown.';
+    const mdSkill = SkillsModule.importMarkdownSkill(mdContent, 'test/SKILL.md');
+    assert(mdSkill !== null && typeof mdSkill === 'object', 'importMarkdownSkill returns skill object');
+    assertEq(mdSkill.name, 'Markdown Skill', 'Parsed name from frontmatter');
+    assertEq(mdSkill.description, 'Test', 'Parsed description from frontmatter');
+    assertEq(mdSkill.icon, 'MD', 'Icon is MD');
+    assert(mdSkill.source === 'skill-md', 'Source is skill-md');
+    SkillsModule.deleteSkill(mdSkill.id);
+
+    suite('Skills: importSkill');
+    const jsonSkill = SkillsModule.importSkill('{"name":"JSON Skill","prompt":"Do X"}');
+    assertEq(jsonSkill.name, 'JSON Skill', 'Parsed name');
+    assertEq(jsonSkill.prompt, 'Do X', 'Parsed prompt');
+    SkillsModule.deleteSkill(jsonSkill.id);
+
+    suite('History: create / get / delete');
+    const conv = window.TyporaGPT.History.create();
+    assert(conv.id !== undefined, 'create returns id');
+    assert(conv.messages.length === 0, 'New conversation has 0 messages');
+    window.TyporaGPT.History.addMessage('user', 'Hello');
+    const updated = window.TyporaGPT.History.get(conv.id);
+    assert(updated.messages.length === 1, 'addMessage adds message');
+    assert(updated.messages[0].role === 'user', 'Message role is user');
+    window.TyporaGPT.History.delete(conv.id);
+    assert(window.TyporaGPT.History.get(conv.id) === null, 'delete removes conversation');
+
+    suite('Context: getCurrentFileName');
+    assertEq(window.TyporaGPT.Context.getCurrentFileName(), 'Untitled', 'No file open = Untitled');
+
+    suite('Context: getDocumentStats');
+    const stats = window.TyporaGPT.Context.getDocumentStats();
+    assert(typeof stats.words === 'number', 'stats.words is number');
+    assert(typeof stats.chars === 'number', 'stats.chars is number');
+
+    // ===== Async Tests =====
+
+    (async () => {
+
+        suiteAsync('LLM: truncateMessages (async)');
+        const sysMsg = { role: 'system', content: 'You are helpful'.repeat(50) };
+        const userMsg1 = { role: 'user', content: 'Hello'.repeat(20) };
+        const asstMsg1 = { role: 'assistant', content: 'Hi there'.repeat(20) };
+        const userMsg2 = { role: 'user', content: 'How are you'.repeat(20) };
+        const msgs = [sysMsg, userMsg1, asstMsg1, userMsg2];
+        try {
+            const truncated = await LLMModule.truncateMessages(msgs, 1000, 100);
+            assert(Array.isArray(truncated), 'truncateMessages returns array');
+            assert(truncated.length > 0, 'Truncated messages not empty');
+            assert(truncated.some(m => m.role === 'system'), 'Keeps system message');
+            assert(truncated.some(m => m.role === 'user'), 'Keeps user message');
+        } catch (e) {
+            assert(false, 'truncateMessages threw: ' + e.message);
+        }
+
+        // ===== Summary =====
+        const summary = document.getElementById('summary');
+        const total = totalPass + totalFail;
+        summary.textContent = total + ' tests: ' + totalPass + ' passed, ' + totalFail + ' failed';
+        summary.style.color = totalFail === 0 ? '#4caf50' : '#f44336';
+    })();
+    </script>
+</body>
+</html>

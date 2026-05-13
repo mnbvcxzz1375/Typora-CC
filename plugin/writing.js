@@ -195,6 +195,23 @@ Format the summary with:
             { role: 'system', content: systemPrompt }
         ];
 
+        const skills = window.TyporaGPT.Skills;
+        if (skills) {
+            const skillsContext = skills.buildSkillsContext ? skills.buildSkillsContext(prompt) : '';
+            if (skillsContext) {
+                messages.push({ role: 'system', content: skillsContext });
+            }
+            const mcpContext = skills.getMCPContextForPrompt ? await skills.getMCPContextForPrompt() : '';
+            if (mcpContext) {
+                messages.push({ role: 'system', content: mcpContext });
+            }
+        }
+
+        const tools = window.TyporaGPT.Tools;
+        if (tools && tools.buildToolsPrompt) {
+            messages.push({ role: 'system', content: tools.buildToolsPrompt() });
+        }
+
         // Add context based on mode
         let contextStr = '';
         if (contextMode === 'folder') {
@@ -263,13 +280,13 @@ Format the summary with:
      */
     getQuickActions() {
         return [
-            { id: 'polish', label: 'Polish', icon: '✨', requiresSelection: true },
-            { id: 'continue', label: 'Continue', icon: '📝', requiresSelection: false },
-            { id: 'summarize', label: 'Summarize', icon: '📋', requiresSelection: false },
-            { id: 'explain', label: 'Explain', icon: '💡', requiresSelection: false },
-            { id: 'translate-zh', label: 'To Chinese', icon: '🇨🇳', requiresSelection: false },
-            { id: 'translate-en', label: 'To English', icon: '🇬🇧', requiresSelection: false },
-            { id: 'translate-ja', label: 'To Japanese', icon: '🇯🇵', requiresSelection: false }
+            { id: 'polish', label: 'Polish', icon: 'P', requiresSelection: true },
+            { id: 'continue', label: 'Continue', icon: 'C', requiresSelection: false },
+            { id: 'summarize', label: 'Summarize', icon: 'S', requiresSelection: false },
+            { id: 'explain', label: 'Explain', icon: 'E', requiresSelection: false },
+            { id: 'translate-zh', label: 'To Chinese', icon: 'ZH', requiresSelection: false },
+            { id: 'translate-en', label: 'To English', icon: 'EN', requiresSelection: false },
+            { id: 'translate-ja', label: 'To Japanese', icon: 'JA', requiresSelection: false }
         ];
     },
 

@@ -13,7 +13,8 @@
         var scripts = document.querySelectorAll('script[src]');
         for (var i = 0; i < scripts.length; i++) {
             var src = scripts[i].getAttribute('src') || '';
-            if (src.indexOf('typora-gpt') !== -1 && src.indexOf('loader') !== -1) {
+            var lowerSrc = src.toLowerCase();
+            if ((lowerSrc.indexOf('typora-gpt') !== -1 || lowerSrc.indexOf('typora-cc') !== -1) && lowerSrc.indexOf('loader') !== -1) {
                 // Found our loader script - base is its directory
                 var base = src.substring(0, src.lastIndexOf('/') + 1);
                 console.log('[Typora-GPT] Detected base path from script tag: ' + base);
@@ -23,6 +24,7 @@
 
         // Strategy 2: Known paths
         var candidates = [
+            './Typora-CC/',
             './typora-gpt/',
             'typora-gpt/',
             'resources/typora-gpt/'
@@ -42,6 +44,7 @@
         'plugin/features.js',
         'plugin/history.js',
         'plugin/skills.js',
+        'plugin/tools.js',
         'plugin/writing.js',
         'plugin/ui.js',
         'plugin/main.js'
@@ -69,6 +72,7 @@
     function loadCSS(href) {
         return new Promise(function (resolve) {
             var link = document.createElement('link');
+            link.id = 'typora-gpt-css';
             link.rel = 'stylesheet';
             link.type = 'text/css';
             link.href = href;

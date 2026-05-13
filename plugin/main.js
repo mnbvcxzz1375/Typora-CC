@@ -1,12 +1,12 @@
 /**
- * Typora-GPT Plugin - Main Entry Point
+ * Typora-CC Plugin - Main Entry Point
  * Keyboard shortcut: Ctrl+Shift+G to toggle the sidebar
  */
 
 (function () {
     'use strict';
 
-    const PLUGIN_NAME = 'Typora-GPT';
+    const PLUGIN_NAME = 'Typora-CC';
     const PLUGIN_VERSION = '1.0.0';
 
     const TyporaGPTPlugin = {
@@ -53,8 +53,8 @@
             if (document.getElementById('typora-gpt-toggle-btn')) return;
             this.toggleBtn = document.createElement('button');
             this.toggleBtn.id = 'typora-gpt-toggle-btn';
-            this.toggleBtn.textContent = 'G';
-            this.toggleBtn.title = 'Toggle MarkPilot (Ctrl+Shift+G)';
+            this.toggleBtn.innerHTML = window.TyporaGPT.UI._svg('app');
+            this.toggleBtn.title = 'Toggle Typora-CC (Ctrl+Shift+G)';
             document.body.appendChild(this.toggleBtn);
 
             let isDragging = false;

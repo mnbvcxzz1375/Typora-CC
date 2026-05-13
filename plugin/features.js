@@ -5,6 +5,8 @@
  */
 
 const FeaturesModule = {
+    SAFE_COMMANDS: [/^git\s+(status|log|diff|show|branch)\b/i, /^dir\b/i, /^ls\b/i, /^Get-ChildItem\b/i, /^pwd\b/i, /^wc\b/i, /^type\b/i, /^cat\b/i],
+    DANGEROUS_PATTERNS: [/\brm\s+-rf\b/i, /\bRemove-Item\b.*\b-Recurse\b/i, /\bdel\b/i, /\brmdir\b/i, /\bgit\s+reset\s+--hard\b/i, /\bgit\s+push\b/i, /\bkill\b/i, /\bStop-Process\b/i, />\s*\S+/, /\bSet-Content\b/i, /\bOut-File\b/i],
 
     // ==================== 1. Project Instructions (CLAUDE.md equivalent) ====================
 
@@ -243,13 +245,23 @@ const FeaturesModule = {
         if (todos.length === 0) return '';
         let ctx = '\n\n## Current Tasks\n\n';
         todos.forEach(t => {
-            const icon = t.status === 'completed' ? '✅' : t.status === 'in_progress' ? '🔄' : '⬜';
+            const icon = t.status === 'completed' ? '[x]' : t.status === 'in_progress' ? '[>]' : '[ ]';
             ctx += icon + ' ' + t.content + '\n';
         });
         return ctx;
     },
 
     // ==================== 6. Command Execution ====================
+
+    isCommandDangerous(command) {
+        return this.DANGEROUS_PATTERNS.some(p => p.test(String(command || '')));
+    },
+
+    isCommandSafe(command) {
+        const cmd = String(command || '').trim();
+        if (!cmd || this.isCommandDangerous(cmd)) return false;
+        return this.SAFE_COMMANDS.some(p => p.test(cmd));
+    },
 
     /**
      * Execute a shell command via Electron's child_process
@@ -259,6 +271,13 @@ const FeaturesModule = {
         try {
             if (typeof reqnode === 'undefined') {
                 return { stdout: '', stderr: 'Shell not available (not in Electron)', exitCode: -1 };
+            }
+
+            if (this.isCommandDangerous(command)) {
+                const ok = typeof confirm === 'function'
+                    ? confirm('This command may modify files, processes, or remote state:\n\n' + command + '\n\nRun it anyway?')
+                    : false;
+                if (!ok) return { stdout:'', stderr:'Command denied by safety check.', exitCode:-1 };
             }
 
             const { execSync } = reqnode('child_process');
@@ -347,6 +366,23 @@ const FeaturesModule = {
         }
 
         return ctx;
+    },
+
+    async getRuntimeStatus() {
+        const config = window.TyporaGPT.LLM.getProviderConfig();
+        const status = window.TyporaGPT.LLM.getContextStatus([]);
+        const git = await this.getGitStatus();
+        const todos = this.getTodos();
+        return [
+            '### Status',
+            '',
+            '- Model: `' + config.model + '`',
+            '- Context window: ' + status.total + ' tokens (' + status.source + ')',
+            '- Max output: ' + config.maxTokens + ' tokens',
+            '- Context mode: ' + (window.TyporaGPT.UI?.contextMode || 'document'),
+            '- Git: ' + (git ? (git.clean ? git.branch + ' clean' : git.branch + ', ' + git.changes.length + ' changed file(s)') : 'not available'),
+            '- Tasks: ' + todos.length
+        ].join('\n');
     },
 
     // ==================== 8. Keyboard Shortcuts ====================
@@ -466,6 +502,32 @@ const FeaturesModule = {
             return { handled: true, response: ctx || 'Not a git repository.' };
         }
 
+        if (lower === '/status') {
+            return { handled: true, response: await this.getRuntimeStatus() };
+        }
+
+        if (lower === '/tools') {
+            const tools = window.TyporaGPT.Tools;
+            if (!tools) return { handled: true, response: 'Typora tools module is not loaded.' };
+            let resp = '### Typora Tools\n\nPermission mode: `' + tools.getPermissionMode() + '`\n\n';
+            tools.listTools().forEach(t => { resp += '- `' + t.name + '`' + (t.writes ? ' (writes)' : '') + ' — ' + t.description + '\n'; });
+            resp += '\nUse `/permission default`, `/permission audit`, or `/permission full` to change execution mode.';
+            return { handled: true, response: resp };
+        }
+
+        if (lower.startsWith('/permission')) {
+            const tools = window.TyporaGPT.Tools;
+            if (!tools) return { handled: true, response: 'Typora tools module is not loaded.' };
+            const mode = input.substring('/permission'.length).trim();
+            if (!mode) return { handled: true, response: 'Current permission mode: `' + tools.getPermissionMode() + '`.\n\nAvailable: `default`, `audit`, `full`.' };
+            try {
+                tools.setPermissionMode(mode);
+                return { handled: true, response: 'Tool permission mode set to `' + mode + '`.' };
+            } catch (e) {
+                return { handled: true, response: e.message };
+            }
+        }
+
         // /memory - show memories
         if (lower === '/memory') {
             const memories = this.getMemories();
@@ -509,7 +571,37 @@ const FeaturesModule = {
             if (!servers.length) return { handled: true, response: 'No MCP servers. Use `/add-mcp name | endpoint` or configure in Settings.' };
             let r = '### MCP Servers\n\n';
             servers.forEach(s => { r += '- **' + s.name + '** (' + (s.enabled ? 'on' : 'off') + '): ' + s.endpoint + '\n'; });
+            r += '\nUse `/mcp-tools <server>` to list tools, or `/mcp-call <server> | <tool> | {"arg":"value"}` to run one.';
             return { handled: true, response: r };
+        }
+
+        // /mcp-tools - list tools for one MCP server
+        if (lower.startsWith('/mcp-tools ')) {
+            const ref = input.substring(11).trim();
+            const srv = window.TyporaGPT.Skills._findMCPServer(ref);
+            if (!srv) return { handled: true, response: 'MCP server not found: `' + ref + '`' };
+            const tools = await window.TyporaGPT.Skills.listMCPTools(srv.id);
+            if (!tools.length) return { handled: true, response: 'No tools returned by **' + srv.name + '**.' };
+            let r = '### MCP Tools: ' + srv.name + '\n\n';
+            tools.forEach(t => { r += '- **' + t.name + '**: ' + (t.description || '') + '\n'; });
+            return { handled: true, response: r };
+        }
+
+        // /mcp-call - execute an MCP tool explicitly
+        if (lower.startsWith('/mcp-call ')) {
+            const parts = input.substring(10).split('|').map(p => p.trim());
+            if (parts.length < 2) return { handled: true, response: 'Format: `/mcp-call server | tool | {"arg":"value"}`' };
+            let args = {};
+            if (parts[2]) {
+                try { args = JSON.parse(parts.slice(2).join('|')); }
+                catch (e) { return { handled: true, response: 'Invalid JSON arguments: ' + e.message }; }
+            }
+            try {
+                const result = await window.TyporaGPT.Skills.callMCPTool(parts[0], parts[1], args);
+                return { handled: true, response: '### MCP Result\n\n```json\n' + JSON.stringify(result, null, 2).slice(0, 12000) + '\n```' };
+            } catch (e) {
+                return { handled: true, response: 'MCP call failed: ' + e.message };
+            }
         }
 
         // /help - show all commands
@@ -517,9 +609,9 @@ const FeaturesModule = {
             return { handled: true, response: '### Commands\n\n'
                 + '- `/remember <fact>` — Save to memory\n- `/memory` — Show memories\n- `/forget all` — Clear memories\n'
                 + '- `/plan` — Toggle plan mode\n- `/todo <task>` — Add task\n- `/tasks` — Show tasks\n'
-                + '- `/search <query>` — Web search\n- `/run <cmd>` — Run shell command\n- `/git` — Git status\n'
+                + '- `/search <query>` — Web search\n- `/run <cmd>` — Run shell command\n- `/git` — Git status\n- `/status` — Session status\n- `/tools` — List Typora tools\n- `/permission <mode>` — Set tool permission mode\n'
                 + '- `/instructions` — Project instructions\n- `/create-skill name | desc | prompt` — Create skill\n'
-                + '- `/add-mcp name | endpoint` — Add MCP server\n- `/mcp` — List MCP servers\n'
+                + '- `/add-mcp name | endpoint` — Add MCP server\n- `/mcp` — List MCP servers\n- `/mcp-tools <server>` — List MCP tools\n- `/mcp-call server | tool | JSON` — Run MCP tool\n'
                 + '- `/help` — This message' };
         }
 

@@ -1,337 +1,479 @@
-# Typora-GPT
+# Typora-CC
 
-> Typora Markdown Editor AI Assistant Plugin — inspired by Zotero GPT, Claude Code, and Linear design language.
+<p align="center">
+  <img src="docs/images/typora-cc-icon.png" alt="Typora-CC icon" width="160" />
+</p>
 
-## What It Does
+<p align="center">
+  <strong>A Codex-style AI assistant for Typora.</strong>
+</p>
 
-A sidebar AI assistant that lives inside Typora. It connects to any large language model, understands your document context, and helps you write, analyze, translate, and manage knowledge — all without leaving the editor.
+<p align="center">
+  Document context · Markdown editing tools · Skills · MCP · Multi-model support
+</p>
 
----
+<p align="center">
+  <a href="README_zh.md">中文</a>
+</p>
 
-## Features
+## What Is Typora-CC?
 
-### Chat Interface
+Typora-CC is an AI assistant plugin for Typora. It adds a chat sidebar to the editor and can work with the current Markdown document, selected text, and files in the current project folder.
 
-- Streaming response sidebar (Ctrl+Shift+G to toggle)
-- Three context modes: **Document** (current file), **Folder** (all .md files in sidebar), **None** (pure chat)
-- Copy / insert responses directly into the document
-- Draggable sidebar resize (drag left edge, 280px–720px)
+It is designed for people who use Typora for writing, reading, summarizing, translating, polishing, and organizing Markdown notes or papers. Compared with a standalone chatbot, Typora-CC stays close to the editor and can act on the document itself.
 
-### Multi-Model Support
+Typora-CC can:
 
-Works with any OpenAI-compatible API:
+- Explain the current document.
+- Polish or translate selected text.
+- Generate Markdown tables and LaTeX formulas.
+- Insert AI output back into Typora.
+- Operate on Markdown through structured local tool calls.
+- Import reusable Skills.
+- Connect to MCP services.
+- Use OpenAI-compatible model providers.
 
-| Provider | Endpoint Example | Models |
-|----------|-----------------|--------|
-| OpenAI | `https://api.openai.com/v1/chat/completions` | gpt-4o, gpt-4o-mini |
-| Anthropic | `https://api.anthropic.com/v1/messages` | claude-sonnet-4, claude-3-5-haiku |
-| DeepSeek | `https://api.deepseek.com/v1/chat/completions` | deepseek-chat, deepseek-r1 |
-| Ollama | `http://localhost:11434/v1/chat/completions` | llama3, qwen2, etc. |
-| Xiaomi TokenPlan | `https://token-plan-cn.xiaomimimo.com/v1` | (auto-discovered) |
-| Any custom | User-configurable | User-configurable |
+## Highlights
 
-Endpoint auto-completion: entering `https://api.example.com/v1` automatically becomes `https://api.example.com/v1/chat/completions`.
+- **Built for Typora**: floating button, sidebar, quick actions, selected text reference, direct insertion.
+- **Context modes**: `Document`, `Folder`, and `None`.
+- **Markdown rendering**: headings, lists, tables, code blocks, inline math, and block math.
+- **Local Markdown tools**: `typora_tool` can replace selected text, insert at cursor, patch Markdown files, and read/write `.md` files.
+- **Permission control**: `Default`, `Audit`, and `Full Access`, shown under the input box and in Settings.
+- **Skills**: built-in skills plus JSON, ZIP, folder, and Codex/Claude-style `SKILL.md` imports.
+- **MCP integration**: add MCP servers, list available tools, and run MCP calls.
+- **Multi-model support**: OpenAI, Anthropic, DeepSeek, Ollama, and custom OpenAI-compatible endpoints.
+- **Context management**: detects or estimates model context windows, estimates token use, and compresses old conversation context instead of bluntly truncating it.
 
-### Thinking Mode
+## Screenshot
 
-For reasoning models (DeepSeek R1, Claude with thinking, QwQ):
-
-- Toggle in Settings with effort levels: Low (2K), Medium (8K), High (32K tokens)
-- Thinking process shown in a collapsible block above the response
-- Auto-detects `reasoning_content` (DeepSeek) and `thinking_delta` (Anthropic) formats
-
-### Selected Text Reference (Copilot-style)
-
-Select any text in the Typora editor:
-
-1. A purple reference bar appears in the sidebar showing the selected text
-2. The sidebar auto-opens
-3. Type a question and press Enter — the selected text is sent as context
-4. Or just press Enter directly to get an explanation/analysis
-
-### File Upload and Multi-modal
-
-- **Click** the attach button, **paste** (Ctrl+V), or **drag and drop** files
-- Supports images (PNG, JPEG, GIF, WebP), text files (.md, .txt, .json, .csv, .js, .py, etc.), PDF
-- Image preview with remove button before sending
-- **Vision models** (GPT-4o, Claude-3+): images sent as base64 in the API request
-- **Non-vision models**: automatic OCR via vision model API
-
-### Conversation Management
-
-- Create new conversations (+ button)
-- Browse history (chat icon)
-- Switch between conversations
-- Delete conversations
-- Auto-titled from first user message
-- All persisted to localStorage
-
-### Skills System
-
-12 built-in skills accessible from the lightning bolt icon:
-
-| Skill | What It Does |
-|-------|-------------|
-| Summarize as Bullets | Document summary as bullet points |
-| Create Table of Contents | Generate TOC from headings |
-| Improve Writing | Improve clarity and readability |
-| Translate to Chinese | Translate content to Chinese |
-| Translate to English | Translate content to English |
-| Explain Code | Explain code blocks in document |
-| Generate Changelog | Create changelog from content |
-| Find Action Items | Extract TODOs and tasks |
-| Rewrite Formal | Formal/professional tone |
-| Rewrite Casual | Casual/friendly tone |
-| Generate Quiz | Create quiz questions |
-| Folder Overview | Overview of all files |
-
-**Custom skills** can be created via:
-- `/create-skill name | description | prompt` slash command
-- Import from JSON file or folder via the Skills panel
-
-### Slash Commands
-
-Type `/` in the input field to see the autocomplete command palette. Arrow keys to navigate, Enter to select.
-
-| Command | Description |
-|---------|-------------|
-| `/remember <fact>` | Save to persistent memory |
-| `/memory` | Show all saved memories |
-| `/forget all` | Clear all memories |
-| `/plan` | Toggle plan mode (AI outlines plan before acting) |
-| `/todo <task>` | Add a task |
-| `/tasks` | Show all tasks |
-| `/search <query>` | Web search via DuckDuckGo |
-| `/run <cmd>` | Execute shell command |
-| `/git` | Show git status, branch, recent commits |
-| `/instructions` | Show project instructions (CLAUDE.md) |
-| `/create-skill name \| desc \| prompt` | Create a custom skill |
-| `/add-mcp name \| endpoint` | Add an MCP server |
-| `/mcp` | List configured MCP servers |
-| `/help` | Show all commands |
-
-### MCP Server Integration
-
-Configure external MCP (Model Context Protocol) servers in Settings:
-
-- Add servers with name, endpoint URL, and optional API key
-- Enable/disable individual servers
-- Manage via Settings UI or `/add-mcp`, `/mcp` commands
-
-### Project Instructions (CLAUDE.md)
-
-The plugin reads project-level instructions from:
-
-1. `CLAUDE.md` in the current project folder
-2. `.typora-gpt.md` in the current project folder
-3. Stored in localStorage as fallback
-
-Instructions are automatically injected into the system prompt.
-
-### Persistent Memory
-
-Save facts that persist across sessions via `/remember`. Stored in localStorage. Use `/memory` to view, `/forget all` to clear.
-
-### Web Search
-
-`/search <query>` searches via DuckDuckGo directly from the chat. Returns titles, snippets, and URLs.
-
-### Command Execution
-
-`/run <cmd>` executes shell commands via Electron's child_process. Output displayed in the chat. Useful for git, pandoc, file operations, etc.
-
-### Git Awareness
-
-`/git` shows current branch, changed files, and recent commits. Git status is also automatically included in the system prompt when inside a git repository.
-
-### Token Management
-
-- Automatic context truncation when content exceeds model limits
-- Token estimation: CJK ~1 token/char, Latin ~3.5 chars/token
-- Configurable max context tokens (default 120K)
-- Configurable max output tokens (default 4K)
-- System messages get 40% of token budget, last user message gets 60%
-
----
+<p align="center">
+  <img src="docs/images/sidebar.png" alt="Typora-CC sidebar" width="80%" />
+</p>
 
 ## Installation
 
-### Windows (Automatic)
+### Windows: Double-click Install
 
-1. Download or clone this repository
-2. If Typora is not at `E:\Typora`, edit `TYPORA_DIR` in `install.bat`
-3. Double-click `install.bat`
-4. Restart Typora
+Recommended for Windows.
 
-### Windows (Manual)
+1. Download or clone this repository.
+2. Open the project folder.
+3. Double-click `install.bat`.
+4. Restart Typora.
+5. Press `Ctrl+Shift+G`, or click the Typora-CC floating button.
 
-1. Copy the `plugin/` folder and `loader-embedded.js` into `Typora安装目录/resources/typora-gpt/`
-2. Rename `loader-embedded.js` to `loader.js`
-3. Open `resources/window.html` in a text editor
-4. Add this line before `</body>`:
+If Typora is not installed at `E:\Typora`, edit `install.ps1` first:
+
+```powershell
+$typoraDir = 'E:\Typora'
+```
+
+Change it to your Typora installation path, for example:
+
+```powershell
+$typoraDir = 'C:\Program Files\Typora'
+```
+
+You can also run the installer manually:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+### Windows: Manual Install
+
+Copy the files into Typora's resources directory:
+
+```text
+<Typora install directory>\resources\typora-gpt\
+├── loader.js
+└── plugin\
+```
+
+Then edit:
+
+```text
+<Typora install directory>\resources\window.html
+```
+
+Add this before `</body>`:
 
 ```html
+<!-- Typora-CC Plugin -->
 <script src="./typora-gpt/loader.js"></script>
 ```
 
-5. Restart Typora
+Restart Typora.
 
-### macOS / Linux
+### macOS: Double-click / Graphical Install
+
+Recommended for macOS.
+
+1. Download or clone this repository.
+2. Right-click `install.command` and choose **Open**. macOS may ask for confirmation the first time.
+3. Restart Typora.
+4. Press `Ctrl+Shift+G`, or click the Typora-CC floating button.
+
+If macOS says the file is not executable, run once:
 
 ```bash
-# macOS
-TYPORA_RES="/Applications/Typora.app/Contents/Resources"
-# Linux
-TYPORA_RES="/opt/Typora/resources"
-
-cp -r plugin "$TYPORA_RES/typora-gpt/plugin"
-cp loader-embedded.js "$TYPORA_RES/typora-gpt/loader.js"
-# Edit window.html: add <script src="./typora-gpt/loader.js"></script> before </body>
+chmod +x install.command
 ```
 
-### Uninstall
+Then double-click it again.
 
-Run `uninstall.bat` (Windows) or remove the `typora-gpt` folder and the script tag from `window.html`.
+If Typora is installed somewhere else:
 
----
+```bash
+TYPORA_RES=/path/to/Typora.app/Contents/Resources ./install.command
+```
+
+### macOS: Manual Install
+
+Typora's resources path is usually:
+
+```text
+/Applications/Typora.app/Contents/Resources/
+```
+
+Create the plugin directory:
+
+```text
+/Applications/Typora.app/Contents/Resources/typora-gpt/
+```
+
+Copy files:
+
+```bash
+cp loader-embedded.js /Applications/Typora.app/Contents/Resources/typora-gpt/loader.js
+cp -R plugin /Applications/Typora.app/Contents/Resources/typora-gpt/plugin
+```
+
+Edit:
+
+```text
+/Applications/Typora.app/Contents/Resources/window.html
+```
+
+Add this before `</body>`:
+
+```html
+<!-- Typora-CC Plugin -->
+<script src="./typora-gpt/loader.js"></script>
+```
+
+Restart Typora.
+
+Editing files under `/Applications` may require administrator permission. Typora updates may overwrite the injected loader, so reinstall the plugin after updating Typora if the sidebar disappears.
+
+### Linux: Double-click / Graphical Install
+
+Most Linux desktop environments can run executable `.sh` files from the file manager.
+
+1. Download or clone this repository.
+2. Add executable permission:
+
+```bash
+chmod +x install-linux.sh
+```
+
+3. Double-click it from the file manager, or run:
+
+```bash
+./install-linux.sh
+```
+
+4. Restart Typora.
+5. Press `Ctrl+Shift+G`, or click the Typora-CC floating button.
+
+If your Typora resources directory is different:
+
+```bash
+TYPORA_RES=/opt/Typora/resources ./install-linux.sh
+```
+
+### Linux: Manual Install
+
+Common Typora resources paths:
+
+```text
+/usr/share/typora/resources/
+/opt/Typora/resources/
+```
+
+Example:
+
+```bash
+cd Typora-CC
+sudo mkdir -p /usr/share/typora/resources/typora-gpt
+sudo cp loader-embedded.js /usr/share/typora/resources/typora-gpt/loader.js
+sudo cp -R plugin /usr/share/typora/resources/typora-gpt/plugin
+```
+
+Then edit:
+
+```text
+/usr/share/typora/resources/window.html
+```
+
+Add this before `</body>`:
+
+```html
+<!-- Typora-CC Plugin -->
+<script src="./typora-gpt/loader.js"></script>
+```
+
+Restart Typora.
 
 ## Configuration
 
-Click the gear icon in the sidebar header.
+Open Settings from the Typora-CC sidebar.
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Provider | OpenAI / Anthropic / Custom | OpenAI |
-| API Key | Your API key | (empty) |
-| Endpoint | API endpoint URL | (auto-filled) |
-| Model | Model name | (auto-filled) |
-| Temperature | 0–2 | 0.7 |
-| Max Output Tokens | Max response length | 4096 |
-| Max Context Tokens | Max input context | 120000 |
-| Thinking Mode | Enable extended thinking | Off |
-| Thinking Effort | Low / Medium / High | Medium |
-| System Prompt | Custom instructions | (default) |
+### Model Providers
 
-Use the **Fetch** button next to Model to auto-discover available models from your API.
+| Provider | Endpoint example | Notes |
+| --- | --- | --- |
+| OpenAI | `https://api.openai.com/v1/chat/completions` | Official OpenAI API |
+| Anthropic | `https://api.anthropic.com/v1/messages` | Claude models |
+| DeepSeek | `https://api.deepseek.com/v1/chat/completions` | OpenAI-compatible |
+| Ollama | `http://localhost:11434/v1/chat/completions` | Local models |
+| Custom | Any OpenAI-compatible endpoint | Proxies or other providers |
 
----
+For OpenAI-compatible providers, you can enter a base URL:
 
-## Architecture
-
+```text
+https://api.example.com/v1
 ```
-typora-gpt/
-├── loader.js            # Module loader (injected into window.html)
+
+Typora-CC will normalize it to:
+
+```text
+https://api.example.com/v1/chat/completions
+```
+
+### Model Context
+
+Typora-CC tries to detect or infer:
+
+- Maximum model context length.
+- Current conversation token usage.
+- Whether old messages need compression.
+- Whether document/folder context should be shortened before sending.
+
+You can still override context settings manually when using a custom provider.
+
+### Tool Permissions
+
+Local document tools are controlled by the permission selector under the input box:
+
+| Mode | Behavior |
+| --- | --- |
+| `Default` | Allows low-risk editor actions and asks before risky writes. |
+| `Audit` | Shows intended tool calls without applying write operations. |
+| `Full Access` | Allows document and Markdown file writes after model output. |
+
+## Feature Details
+
+### 1. Chat Sidebar
+
+- Toggle with `Ctrl+Shift+G`.
+- Stream model responses.
+- Create, switch, and delete conversations.
+- Copy or insert AI output.
+- Resize the sidebar.
+- Render Markdown, code blocks, tables, and math.
+
+### 2. Context Modes
+
+| Mode | Use case |
+| --- | --- |
+| `Document` | Send current Markdown content as context. |
+| `Folder` | Use Markdown files in the current folder as context. |
+| `None` | Chat without document context. |
+
+### 3. Quick Actions
+
+The quick action buttons are for common writing tasks:
+
+- Polish
+- Continue
+- Summarize
+- Translate
+- Explain
+- Generate outline
+
+### 4. Markdown and LaTeX Output
+
+Typora-CC encourages model output that works well in Typora:
+
+- Tables use standard Markdown table syntax.
+- Block formulas are wrapped in `$$`.
+- Formula subscripts use braces when needed, such as `x_{total}`.
+- Code-like algorithms stay in fenced code blocks.
+
+Example:
+
+```markdown
+$$
+L_{total} = \lambda_{cls} L_{cls} + \lambda_{feat} L_{feat}
+$$
+```
+
+### 5. Local Document Tools
+
+Models can request real document operations through fenced `typora_tool` blocks:
+
+```typora_tool
+{"tool":"insertAtCursor","args":{"text":"New Markdown content"}}
+```
+
+Supported operations include:
+
+- `getCurrentMarkdown`
+- `getSelectedText`
+- `replaceSelection`
+- `insertAtCursor`
+- `replaceCurrentDocument`
+- `saveCurrentDocument`
+- `readMarkdownFile`
+- `writeMarkdownFile`
+- `patchMarkdownFile`
+- `listMarkdownFiles`
+
+File-writing tools create backups before modifying Markdown files.
+
+### 6. Skills
+
+Skills are reusable prompts or workflows. Typora-CC supports:
+
+- Built-in skills.
+- JSON skill files.
+- ZIP packages.
+- Folder imports.
+- Codex/Claude-style skill folders with `SKILL.md`.
+
+Imported skills appear in the Skills panel and can be used from the slash menu or quick actions.
+
+### 7. MCP
+
+Typora-CC can connect to MCP services so the assistant can use external tools.
+
+You can:
+
+- Add MCP servers in Settings.
+- List available tools.
+- Run tool calls.
+- Use `/mcp-tools` and `/mcp-call`.
+
+The model can also output `mcp_call` blocks, and Typora-CC will execute them and append the result to the conversation.
+
+### 8. Slash Commands
+
+Type `/` in the input box to open the command palette.
+
+| Command | Description |
+| --- | --- |
+| `/remember <fact>` | Save a memory. |
+| `/memory` | Show saved memories. |
+| `/forget all` | Clear memories. |
+| `/plan` | Toggle plan mode. |
+| `/todo <task>` | Add a task. |
+| `/tasks` | Show tasks. |
+| `/search <query>` | Run web search. |
+| `/tools` | Show local document tools. |
+| `/permission <mode>` | Change tool permission mode. |
+| `/mcp-tools` | List MCP tools. |
+| `/mcp-call` | Call an MCP tool. |
+| `/help` | Show commands. |
+
+## Project Structure
+
+```text
+Typora-CC/
 ├── plugin/
-│   ├── main.js          # Entry point, lifecycle, toggle button
-│   ├── ui.js            # Sidebar UI, events, rendering
-│   ├── llm.js           # API communication, token management, thinking
-│   ├── context.js       # Document/folder content extraction
-│   ├── media.js         # File upload, multi-modal, OCR
-│   ├── features.js      # CLAUDE.md, memory, search, plan, tasks, git
-│   ├── history.js       # Conversation persistence
-│   ├── skills.js        # Skills system, MCP framework
-│   ├── writing.js       # Writing assistance (orchestrates all modules)
-│   └── css/
-│       └── style.css    # Design system
-├── install.bat          # Windows installer
-├── uninstall.bat        # Windows uninstaller
-├── loader-embedded.js   # Portable loader (for distribution)
-└── README.md
+│   ├── context.js        # Document and folder context
+│   ├── features.js       # Slash commands and feature actions
+│   ├── history.js        # Conversation history
+│   ├── llm.js            # Model provider clients
+│   ├── main.js           # Plugin entry
+│   ├── media.js          # File and image handling
+│   ├── skills.js         # Skills system
+│   ├── tools.js          # Local Markdown tools
+│   ├── ui.js             # Sidebar UI
+│   ├── writing.js        # Prompt and writing helpers
+│   └── css/style.css     # UI styles
+├── docs/images/          # README images and icon
+├── tests/                # Local smoke test page
+├── install.bat           # Windows double-click installer
+├── install.ps1           # Windows installer logic
+├── install.command       # macOS installer
+├── install-linux.sh      # Linux installer
+├── loader.js             # Development loader
+└── loader-embedded.js    # Installed loader
 ```
-
-### Module Dependencies
-
-```
-main.js
-  └── ui.js
-        ├── llm.js
-        ├── writing.js
-        │     ├── context.js
-        │     ├── llm.js
-        │     ├── media.js
-        │     └── features.js
-        ├── history.js
-        ├── skills.js
-        └── media.js
-```
-
-All modules communicate via `window.TyporaGPT` namespace. No direct imports.
-
-### Design System
-
-- **Colors**: Dark theme (#0f0f14), purple accent (#6e56cf), auto light theme
-- **Typography**: System font stack + Cascadia Code for monospace
-- **Icons**: SVG (Feather Icons style), zero emoji
-- **Spacing**: CSS custom properties, 6px/10px border radius
-- **Animation**: cubic-bezier(.16,1,.3,1), 180ms transitions
-
----
 
 ## Development
 
-### Add a New Skill
+Typora-CC is plain JavaScript and does not require a build step.
 
-Edit `plugin/skills.js`, add to `builtinSkills`:
+For local browser smoke testing:
 
-```javascript
-{ id:'my-skill', name:'My Skill', icon:'M', description:'What it does', prompt:'The prompt', contextMode:'document' }
+```bash
+python -m http.server 8000
 ```
 
-### Add a New Slash Command
+Then open:
 
-Edit `plugin/features.js`, add handler in `handleSpecialCommand()`:
-
-```javascript
-if (lower.startsWith('/mycommand ')) {
-    const arg = input.substring(11).trim();
-    return { handled: true, response: 'Result' };
-}
+```text
+http://localhost:8000/tests/test.html
 ```
 
-Then add to the `_commands` array in `ui.js` for autocomplete.
-
-### Add a New Module
-
-1. Create `plugin/mymodule.js`
-2. Export: `window.TyporaGPT.MyModule = MyModule;`
-3. Add to `MODULES` array in both `loader.js` and `loader-embedded.js`
-4. Reference from other modules: `window.TyporaGPT.MyModule`
-
----
+For real Typora testing, reinstall the plugin and restart Typora.
 
 ## Troubleshooting
 
-**Plugin not loading after restart**
-- Press F12 in Typora, check Console for `[Typora-GPT]` messages
-- Verify `window.html` has the script tag before `</body>`
-- Ensure all files exist in `resources/typora-gpt/plugin/`
+### The Sidebar Does Not Appear
 
-**API Error 404**
-- Endpoint URL is wrong. Use "Fetch" button or check provider docs.
-- The plugin auto-completes `/v1` to `/v1/chat/completions`.
+- Restart Typora.
+- Check whether `window.html` contains `typora-gpt/loader.js`.
+- Re-run the installer after Typora updates.
+- Open Typora DevTools and check the console for plugin errors.
 
-**API Error 400 "Param Incorrect"**
-- Model name is wrong. Use "Fetch Models" to discover available models.
+### API Calls Fail
 
-**API Error 401**
-- API key is invalid or expired. Check in Settings.
+- Check API key and endpoint.
+- For OpenAI-compatible providers, use a `/v1` base URL or a full `/chat/completions` URL.
+- Make sure the selected model exists on the provider.
+- For local Ollama, confirm Ollama is running.
 
-**Context too large**
-- Reduce "Max Context Tokens" in Settings
-- Switch to "Context: None" mode
-- The plugin auto-truncates, but very large documents may still exceed limits
+### Tool Calls Do Not Execute
 
-**Sidebar doesn't close properly**
-- Make sure you're using the latest version of ui.js
+- Check the permission selector under the input box.
+- Use `Audit` mode to inspect the requested operation.
+- Use `Full Access` only when you want the assistant to modify files directly.
+- Confirm the model output contains a valid fenced `typora_tool` block.
 
----
+## Roadmap
+
+- More built-in writing and research skills.
+- Better MCP discovery and tool result display.
+- More provider-specific context window metadata.
+- Import/export for settings, skills, and conversations.
+
+## Contributing
+
+Issues and pull requests are welcome. Please keep changes focused and include a short description of the behavior being changed.
+
+## Acknowledgements
+
+Typora-CC is inspired by and learns from these projects:
+
+- [obsidian42-brat](https://github.com/TfTHacker/obsidian42-brat)
+- [claude-code](https://github.com/claude-code-best/claude-code)
+- [zotero-gpt](https://github.com/MuiseDestiny/zotero-gpt)
+- [zotero-style](https://github.com/MuiseDestiny/zotero-style)
 
 ## License
 
-MIT
-
-## Credits
-
-- [Typora](https://typora.io/) — the Markdown editor
-- [zotero-gpt](https://github.com/MuiseDestiny/zotero-gpt) — plugin concept inspiration
-- [Linear](https://linear.app) — design language reference
+This project is released as an open-source project. Please check the repository license before redistribution or commercial use.

@@ -6,28 +6,28 @@
 /* ---------- Tokens ---------- */
 :root {
     /* Surface */
-    --gpt-bg:              #0f0f14;
-    --gpt-bg-secondary:    #16161e;
-    --gpt-bg-tertiary:     #1e1e2a;
-    --gpt-bg-elevated:     #24243a;
-    --gpt-bg-hover:        #2a2a40;
-    --gpt-bg-active:       #32325a;
+    --gpt-bg:              #0d0f10;
+    --gpt-bg-secondary:    #131617;
+    --gpt-bg-tertiary:     #191d1f;
+    --gpt-bg-elevated:     #202528;
+    --gpt-bg-hover:        #263034;
+    --gpt-bg-active:       #2d3a3f;
 
     /* Text */
-    --gpt-text:            #e4e4ed;
-    --gpt-text-secondary:  #9898b0;
-    --gpt-text-muted:      #5e5e78;
-    --gpt-text-inverse:    #0f0f14;
+    --gpt-text:            #f2f4f3;
+    --gpt-text-secondary:  #a5adaa;
+    --gpt-text-muted:      #68716f;
+    --gpt-text-inverse:    #0d0f10;
 
     /* Accent */
-    --gpt-accent:          #6e56cf;
-    --gpt-accent-hover:    #7c66e0;
-    --gpt-accent-subtle:   rgba(110, 86, 207, 0.12);
-    --gpt-accent-text:     #b8a9f0;
+    --gpt-accent:          #22c55e;
+    --gpt-accent-hover:    #34d399;
+    --gpt-accent-subtle:   rgba(34, 197, 94, 0.13);
+    --gpt-accent-text:     #86efac;
 
     /* Semantic */
-    --gpt-border:          #28283a;
-    --gpt-border-subtle:   #1e1e2e;
+    --gpt-border:          #273034;
+    --gpt-border-subtle:   #1b2225;
     --gpt-error:           #e5484d;
     --gpt-error-bg:        rgba(229, 72, 77, 0.10);
     --gpt-success:         #46a758;
@@ -58,27 +58,56 @@
     --gpt-sidebar-max:     720px;
 }
 
-/* Light surface (auto when Typora is in light mode) */
-.typora-node:not(.dark-mode) {
-    --gpt-bg:              #ffffff;
-    --gpt-bg-secondary:    #f8f8fa;
-    --gpt-bg-tertiary:     #f0f0f5;
+/* Light surface (auto when Typora is in light mode, or explicit plugin theme) */
+.typora-node:not(.dark-mode):not([data-typora-gpt-theme="dark"]),
+html[data-typora-gpt-theme="light"],
+body[data-typora-gpt-theme="light"],
+#typora-gpt-sidebar[data-typora-gpt-theme="light"],
+[data-typora-gpt-theme="light"] {
+    --gpt-bg:              #fbfcfc;
+    --gpt-bg-secondary:    #f3f5f4;
+    --gpt-bg-tertiary:     #e9eeeb;
     --gpt-bg-elevated:     #ffffff;
-    --gpt-bg-hover:        #ececf0;
-    --gpt-bg-active:       #e4e4ec;
-    --gpt-text:            #1a1a2e;
-    --gpt-text-secondary:  #5a5a72;
-    --gpt-text-muted:      #9898aa;
+    --gpt-bg-hover:        #dde5e1;
+    --gpt-bg-active:       #cedbd5;
+    --gpt-text:            #111715;
+    --gpt-text-secondary:  #4e5a56;
+    --gpt-text-muted:      #7b8782;
     --gpt-text-inverse:    #ffffff;
-    --gpt-accent:          #6e56cf;
-    --gpt-accent-hover:    #5b42b8;
-    --gpt-accent-subtle:   rgba(110, 86, 207, 0.08);
-    --gpt-accent-text:     #5b42b8;
-    --gpt-border:          #e0e0ea;
-    --gpt-border-subtle:   #eaeaf0;
+    --gpt-accent:          #0f8f4f;
+    --gpt-accent-hover:    #0b7a43;
+    --gpt-accent-subtle:   rgba(15, 143, 79, 0.10);
+    --gpt-accent-text:     #0b6b3c;
+    --gpt-border:          #d8e0dc;
+    --gpt-border-subtle:   #e6ebe8;
     --gpt-shadow-sm:       0 1px 2px rgba(0,0,0,0.06);
     --gpt-shadow-md:       0 4px 16px rgba(0,0,0,0.08);
     --gpt-shadow-lg:       0 8px 32px rgba(0,0,0,0.12);
+}
+
+html[data-typora-gpt-theme="dark"],
+body[data-typora-gpt-theme="dark"],
+#typora-gpt-sidebar[data-typora-gpt-theme="dark"],
+[data-typora-gpt-theme="dark"] {
+    --gpt-bg:              #0d0f10;
+    --gpt-bg-secondary:    #131617;
+    --gpt-bg-tertiary:     #191d1f;
+    --gpt-bg-elevated:     #202528;
+    --gpt-bg-hover:        #263034;
+    --gpt-bg-active:       #2d3a3f;
+    --gpt-text:            #f2f4f3;
+    --gpt-text-secondary:  #a5adaa;
+    --gpt-text-muted:      #68716f;
+    --gpt-text-inverse:    #0d0f10;
+    --gpt-accent:          #22c55e;
+    --gpt-accent-hover:    #34d399;
+    --gpt-accent-subtle:   rgba(34, 197, 94, 0.13);
+    --gpt-accent-text:     #86efac;
+    --gpt-border:          #273034;
+    --gpt-border-subtle:   #1b2225;
+    --gpt-shadow-sm:       0 1px 2px rgba(0,0,0,0.25);
+    --gpt-shadow-md:       0 4px 16px rgba(0,0,0,0.35);
+    --gpt-shadow-lg:       0 8px 32px rgba(0,0,0,0.45);
 }
 
 /* ---------- Sidebar Shell ---------- */
@@ -144,23 +173,27 @@
 }
 
 .gpt-logo {
-    width: 18px;
-    height: 18px;
-    border-radius: 4px;
-    background: var(--gpt-accent);
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: #111417;
+    border: 1px solid #30363d;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.5px;
+    color: var(--gpt-accent-text);
+}
+
+.gpt-logo svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
 }
 
 .gpt-title {
     font-weight: 600;
     font-size: 13px;
-    letter-spacing: -0.2px;
+    letter-spacing: 0;
     color: var(--gpt-text);
 }
 
@@ -214,10 +247,14 @@
     border-bottom: 1px solid var(--gpt-border);
     overflow-x: auto;
     flex-shrink: 0;
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    position: relative;
 }
 
-.gpt-quick-actions::-webkit-scrollbar { display: none; }
+.gpt-quick-actions::-webkit-scrollbar { height: 3px; }
+.gpt-quick-actions::-webkit-scrollbar-track { background: transparent; }
+.gpt-quick-actions::-webkit-scrollbar-thumb { background: var(--gpt-border); border-radius: 2px; }
+.gpt-quick-actions::-webkit-scrollbar-thumb:hover { background: var(--gpt-text-muted); }
 
 .gpt-quick-btn {
     background: transparent;
@@ -232,7 +269,7 @@
     transition: all var(--gpt-duration) ease;
     font-family: var(--gpt-font);
     line-height: 1.4;
-    letter-spacing: 0.01em;
+    letter-spacing: 0;
 }
 
 .gpt-quick-btn:hover {
@@ -282,6 +319,12 @@
     background: var(--gpt-bg-tertiary);
     color: var(--gpt-text-muted);
     border: 1px solid var(--gpt-border);
+}
+
+.gpt-message-avatar svg {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
 }
 
 .gpt-message-user .gpt-message-avatar {
@@ -335,7 +378,7 @@
 .gpt-message-content h4 {
     margin: 14px 0 6px 0;
     font-weight: 600;
-    letter-spacing: -0.2px;
+    letter-spacing: 0;
 }
 
 .gpt-message-content h2 { font-size: 15px; }
@@ -387,6 +430,68 @@
 
 .gpt-message-content a:hover {
     border-bottom-color: var(--gpt-accent-text);
+}
+
+.gpt-message-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 12px;
+    line-height: 1.45;
+    overflow: hidden;
+    border-radius: var(--gpt-radius);
+}
+
+.gpt-message-content th,
+.gpt-message-content td {
+    border: 1px solid var(--gpt-border);
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.gpt-message-content th {
+    background: var(--gpt-bg);
+    color: var(--gpt-text);
+    font-weight: 600;
+}
+
+.gpt-message-content td {
+    background: var(--gpt-bg-tertiary);
+}
+
+.gpt-message-content blockquote {
+    margin: 8px 0;
+    padding: 6px 10px;
+    border-left: 3px solid var(--gpt-accent);
+    background: var(--gpt-accent-subtle);
+    color: var(--gpt-text-secondary);
+    border-radius: 0 var(--gpt-radius) var(--gpt-radius) 0;
+}
+
+.gpt-math {
+    font-family: var(--gpt-font-mono);
+    color: var(--gpt-accent-text);
+}
+
+.gpt-math-inline {
+    display: inline-block;
+    background: var(--gpt-bg);
+    border: 1px solid var(--gpt-border-subtle);
+    border-radius: 3px;
+    padding: 1px 5px;
+    line-height: 1.35;
+}
+
+.gpt-math-block {
+    display: block;
+    margin: 10px 0;
+    padding: 10px 12px;
+    overflow-x: auto;
+    background: var(--gpt-bg);
+    border: 1px solid var(--gpt-border);
+    border-radius: var(--gpt-radius);
+    text-align: center;
 }
 
 /* ---------- Message Actions ---------- */
@@ -552,6 +657,8 @@
     background: var(--gpt-bg-secondary);
     border-top: 1px solid var(--gpt-border);
     flex-shrink: 0;
+    overflow: visible;
+    max-height: 50vh;
 }
 
 .gpt-input-row {
@@ -572,7 +679,7 @@
     resize: none;
     outline: none;
     min-height: 38px;
-    max-height: 140px;
+    max-height: 200px;
     line-height: 1.5;
     transition: border-color var(--gpt-duration) ease;
 }
@@ -639,6 +746,50 @@
     width: 1px;
     height: 10px;
     background: var(--gpt-border);
+}
+
+.gpt-permission-inline {
+    height: 18px;
+    max-width: 96px;
+    border: 1px solid var(--gpt-border);
+    border-radius: var(--gpt-radius-pill);
+    background: var(--gpt-bg-secondary);
+    color: var(--gpt-text-secondary);
+    font-size: 11px;
+    line-height: 16px;
+    padding: 0 18px 0 8px;
+    outline: none;
+}
+
+.gpt-permission-inline:focus {
+    border-color: var(--gpt-accent);
+    color: var(--gpt-text-primary);
+}
+
+#gpt-command-palette {
+    overflow: hidden auto !important;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gpt-text-muted) transparent;
+}
+
+#gpt-command-palette::-webkit-scrollbar {
+    width: 10px;
+}
+
+#gpt-command-palette::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: var(--gpt-radius-lg);
+    margin: 8px 4px;
+}
+
+#gpt-command-palette::-webkit-scrollbar-thumb {
+    background: var(--gpt-text-muted);
+    border: 2px solid var(--gpt-bg-secondary);
+    border-radius: var(--gpt-radius-pill);
+}
+
+#gpt-command-palette::-webkit-scrollbar-thumb:hover {
+    background: var(--gpt-text-secondary);
 }
 
 /* ---------- Panels (History / Skills) ---------- */
@@ -748,6 +899,11 @@
     color: var(--gpt-text-muted);
 }
 
+.gpt-skill-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
 .gpt-skill-info { flex: 1; min-width: 0; }
 
 .gpt-skill-name {
@@ -817,7 +973,7 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--gpt-text);
-    letter-spacing: -0.2px;
+    letter-spacing: 0;
 }
 
 .gpt-modal-body { padding: 16px 20px 20px; }
@@ -860,6 +1016,13 @@
 
 .gpt-setting-group textarea { resize: vertical; min-height: 72px; }
 .gpt-setting-group input[type="range"] { width: 100%; accent-color: var(--gpt-accent); }
+
+.gpt-setting-note {
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--gpt-text-muted);
+}
 
 .gpt-setting-actions {
     display: flex;
@@ -956,12 +1119,12 @@
     bottom: 28px;
     right: 14px;
     z-index: 10001;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--gpt-accent);
-    color: #fff;
-    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: #111417;
+    color: #58f08b;
+    border: 1px solid #30363d;
     cursor: pointer;
     font-size: 14px;
     font-weight: 700;
@@ -970,12 +1133,18 @@
     justify-content: center;
     box-shadow: var(--gpt-shadow-md);
     transition: transform var(--gpt-duration) var(--gpt-ease), box-shadow var(--gpt-duration) ease, right var(--gpt-duration) var(--gpt-ease);
-    letter-spacing: -0.5px;
+    letter-spacing: 0;
 }
 
-/* Move toggle button to the left when sidebar is open */
+#typora-gpt-toggle-btn svg {
+    width: 40px;
+    height: 40px;
+    fill: none;
+}
+
+/* The floating icon is only shown while the sidebar is minimized. */
 #typora-gpt-sidebar.gpt-open ~ #typora-gpt-toggle-btn {
-    right: calc(var(--gpt-sidebar-width) + 14px);
+    display: none;
 }
 
 #typora-gpt-toggle-btn:hover {
