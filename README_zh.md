@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>一个用于 Typora 的 Codex 风格 AI 助手。</strong>
+  <strong>一个用于 Typora 的  AI 助手。</strong>
 </p>
 
 <p align="center">
@@ -50,7 +50,7 @@ Typora-CC 可以：
 - 显示效果
 
 <p align="center">
-  <img src="docs/images/sidebar.png" alt="显示效果" width=80%/>
+  <img src="docs/images/sidebar.png" alt="显示效果" width=100%/>
 </p>
 
 ## 安装
@@ -526,11 +526,11 @@ Typora/resources/typora-gpt/plugin/
 - [mnbvcxzz1375 (Yecheng He)](https://github.com/mnbvcxzz1375) — 作者 & 维护者
 - [Typora](https://typora.io/) — Markdown 编辑器
 - [obsidian42-brat](https://github.com/TfTHacker/obsidian42-brat)
-- [claude-code](https://github.com/claude-code-best/claude-code)
 - [zotero-gpt](https://github.com/MuiseDestiny/zotero-gpt)
 - [zotero-style](https://github.com/MuiseDestiny/zotero-style)
-- [Best README template](https://github.com/shaojintian/Best_README_template)
 
 ## 开源协议
 
-MIT
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

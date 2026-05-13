@@ -48,7 +48,7 @@ Typora-CC can:
 ## Screenshot
 
 <p align="center">
-  <img src="docs/images/sidebar.png" alt="Typora-CC sidebar" width="80%" />
+  <img src="docs/images/sidebar.png" alt="Typora-CC sidebar" width="100%" />
 </p>
 
 ## Installation
@@ -232,13 +232,13 @@ Open Settings from the Typora-CC sidebar.
 
 ### Model Providers
 
-| Provider | Endpoint example | Notes |
-| --- | --- | --- |
-| OpenAI | `https://api.openai.com/v1/chat/completions` | Official OpenAI API |
-| Anthropic | `https://api.anthropic.com/v1/messages` | Claude models |
-| DeepSeek | `https://api.deepseek.com/v1/chat/completions` | OpenAI-compatible |
-| Ollama | `http://localhost:11434/v1/chat/completions` | Local models |
-| Custom | Any OpenAI-compatible endpoint | Proxies or other providers |
+| Provider  | Endpoint example                                 | Notes                      |
+| --------- | ------------------------------------------------ | -------------------------- |
+| OpenAI    | `https://api.openai.com/v1/chat/completions`   | Official OpenAI API        |
+| Anthropic | `https://api.anthropic.com/v1/messages`        | Claude models              |
+| DeepSeek  | `https://api.deepseek.com/v1/chat/completions` | OpenAI-compatible          |
+| Ollama    | `http://localhost:11434/v1/chat/completions`   | Local models               |
+| Custom    | Any OpenAI-compatible endpoint                   | Proxies or other providers |
 
 For OpenAI-compatible providers, you can enter a base URL:
 
@@ -267,10 +267,10 @@ You can still override context settings manually when using a custom provider.
 
 Local document tools are controlled by the permission selector under the input box:
 
-| Mode | Behavior |
-| --- | --- |
-| `Default` | Allows low-risk editor actions and asks before risky writes. |
-| `Audit` | Shows intended tool calls without applying write operations. |
+| Mode            | Behavior                                                     |
+| --------------- | ------------------------------------------------------------ |
+| `Default`     | Allows low-risk editor actions and asks before risky writes. |
+| `Audit`       | Shows intended tool calls without applying write operations. |
 | `Full Access` | Allows document and Markdown file writes after model output. |
 
 ## Feature Details
@@ -286,11 +286,11 @@ Local document tools are controlled by the permission selector under the input b
 
 ### 2. Context Modes
 
-| Mode | Use case |
-| --- | --- |
-| `Document` | Send current Markdown content as context. |
-| `Folder` | Use Markdown files in the current folder as context. |
-| `None` | Chat without document context. |
+| Mode         | Use case                                             |
+| ------------ | ---------------------------------------------------- |
+| `Document` | Send current Markdown content as context.            |
+| `Folder`   | Use Markdown files in the current folder as context. |
+| `None`     | Chat without document context.                       |
 
 ### 3. Quick Actions
 
@@ -372,20 +372,20 @@ The model can also output `mcp_call` blocks, and Typora-CC will execute them and
 
 Type `/` in the input box to open the command palette.
 
-| Command | Description |
-| --- | --- |
-| `/remember <fact>` | Save a memory. |
-| `/memory` | Show saved memories. |
-| `/forget all` | Clear memories. |
-| `/plan` | Toggle plan mode. |
-| `/todo <task>` | Add a task. |
-| `/tasks` | Show tasks. |
-| `/search <query>` | Run web search. |
-| `/tools` | Show local document tools. |
+| Command                | Description                  |
+| ---------------------- | ---------------------------- |
+| `/remember <fact>`   | Save a memory.               |
+| `/memory`            | Show saved memories.         |
+| `/forget all`        | Clear memories.              |
+| `/plan`              | Toggle plan mode.            |
+| `/todo <task>`       | Add a task.                  |
+| `/tasks`             | Show tasks.                  |
+| `/search <query>`    | Run web search.              |
+| `/tools`             | Show local document tools.   |
 | `/permission <mode>` | Change tool permission mode. |
-| `/mcp-tools` | List MCP tools. |
-| `/mcp-call` | Call an MCP tool. |
-| `/help` | Show commands. |
+| `/mcp-tools`         | List MCP tools.              |
+| `/mcp-call`          | Call an MCP tool.            |
+| `/help`              | Show commands.               |
 
 ## Project Structure
 
@@ -469,11 +469,14 @@ Issues and pull requests are welcome. Please keep changes focused and include a 
 
 Typora-CC is inspired by and learns from these projects:
 
+- [mnbvcxzz1375 (Yecheng He)](https://github.com/mnbvcxzz1375) — 作者 & 维护者
+- [Typora](https://typora.io/) — Markdown 编辑器
 - [obsidian42-brat](https://github.com/TfTHacker/obsidian42-brat)
-- [claude-code](https://github.com/claude-code-best/claude-code)
 - [zotero-gpt](https://github.com/MuiseDestiny/zotero-gpt)
 - [zotero-style](https://github.com/MuiseDestiny/zotero-style)
 
 ## License
 
-This project is released as an open-source project. Please check the repository license before redistribution or commercial use.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
