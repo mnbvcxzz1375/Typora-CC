@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>A Codex-style AI assistant for Typora.</strong>
+  <strong>An AI assistant for Typora.</strong>
 </p>
 
 <p align="center">
@@ -469,9 +469,8 @@ Issues and pull requests are welcome. Please keep changes focused and include a 
 
 Typora-CC is inspired by and learns from these projects:
 
-- [mnbvcxzz1375 (Yecheng He)](https://github.com/mnbvcxzz1375) — 作者 & 维护者
-- [Typora](https://typora.io/) — Markdown 编辑器
 - [obsidian42-brat](https://github.com/TfTHacker/obsidian42-brat)
+- [claude-code](https://github.com/claude-code-best/claude-code)
 - [zotero-gpt](https://github.com/MuiseDestiny/zotero-gpt)
 - [zotero-style](https://github.com/MuiseDestiny/zotero-style)
 
