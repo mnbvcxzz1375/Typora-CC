@@ -1,7 +1,7 @@
 # Typora-CC
 
 <p align="center">
-  <img src="docs/images/typora-cc-icon.png" alt="Typora-CC 图标" width="160" />
+  <img src="docs/images/typora-cc-icon.svg" alt="Typora-CC 图标" width="160" />
 </p>
 
 <p align="center">
