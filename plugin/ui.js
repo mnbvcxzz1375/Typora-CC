@@ -12,7 +12,7 @@
  * - Sidebar resize (drag left edge)
  */
 const UIModule = {
-    sidebar:null,messagesContainer:null,inputField:null,isStreaming:false,currentAbortController:null,contextMode:'document',pendingAttachments:[],_themeState:'auto',_stickToBottom:true,
+    sidebar:null,messagesContainer:null,inputField:null,isStreaming:false,currentAbortController:null,contextMode:'document',pendingAttachments:[],_themeState:'auto',_stickToBottom:true,_editorRange:null,
     get llm(){return window.TyporaGPT.LLM},get writing(){return window.TyporaGPT.Writing},get context(){return window.TyporaGPT.Context},
     _icons:{
         app:'<svg class="gpt-app-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5" fill="#111417" stroke="#2d3338"/><path d="M7 7h5l2 2h3v8H7z" fill="#252a2f" stroke="#59616a"/><path d="M8.5 11h5.5M8.5 14h4" stroke="#8b949e"/><path d="M16.4 6.8l.55 1.55 1.55.55-1.55.55-.55 1.55-.55-1.55-1.55-.55 1.55-.55z" fill="#58f08b" stroke="#8cffb2"/><path d="M15.5 15.5l1.2-1.2M17 17l1.45-1.45M16.8 14.1a.7.7 0 100 1.4.7.7 0 000-1.4zM18.7 12.2a.7.7 0 100 1.4.7.7 0 000-1.4zM18.7 16a.7.7 0 100 1.4.7.7 0 000-1.4z" stroke="#58f08b"/></svg>',
@@ -71,6 +71,7 @@ const UIModule = {
         +'<input type="hidden" id="gpt-setting-maxcontexttokens" value="" />'
         +'<div class="gpt-setting-group"><label>Tool Permissions</label><select id="gpt-setting-toolpermission"><option value="default">Default - confirm write tools</option><option value="audit">Audit - confirm every tool</option><option value="full">Full Access - no confirmations</option></select><div class="gpt-setting-note">Controls typora_tool execution for document and Markdown file operations.</div></div>'
         +'<div class="gpt-setting-group" style="border:1px solid var(--gpt-border);border-radius:var(--gpt-radius);padding:10px 12px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="gpt-setting-enablethinking" style="accent-color:var(--gpt-accent);" /><span>Thinking Mode</span></label><div id="gpt-thinking-options" class="gpt-hidden" style="margin-top:8px;"><label>Effort</label><select id="gpt-setting-thinkingeffort"><option value="low">Low (2K)</option><option value="medium" selected>Medium (8K)</option><option value="high">High (32K)</option></select></div></div>'
+        +'<div class="gpt-setting-group" style="border:1px solid var(--gpt-border);border-radius:var(--gpt-radius);padding:10px 12px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" id="gpt-setting-autoopenselection" style="accent-color:var(--gpt-accent);" /><span>Open sidebar when text is selected</span></label><div class="gpt-setting-note">When disabled, selected text is available after opening Typora-CC manually.</div></div>'
         +'<div class="gpt-setting-group"><label>System Prompt</label><textarea id="gpt-setting-systemprompt" rows="3" placeholder="Custom instructions..."></textarea></div>'
         +'<div class="gpt-setting-group gpt-setting-actions"><button id="gpt-test-connection" class="gpt-btn gpt-btn-secondary">Test</button><button id="gpt-save-settings" class="gpt-btn gpt-btn-primary">Save</button></div>'
         +'<div id="gpt-test-result" class="gpt-test-result gpt-hidden"></div>'
@@ -166,7 +167,40 @@ const UIModule = {
     _typesetMath(root){try{if(window.MathJax&&window.MathJax.typesetPromise){window.MathJax.typesetPromise([root]);return}if(window.katex){root.querySelectorAll('.gpt-math').forEach(el=>{let tex=el.textContent.trim();tex=tex.replace(/^\$\$|\$\$$/g,'').replace(/^\\\[|\\\]$/g,'').replace(/^\\\(|\\\)$/g,'').replace(/^\$|\$$/g,'');window.katex.render(tex,el,{throwOnError:false,displayMode:el.classList.contains('gpt-math-block')})})}}catch(e){}},
     _updateStreamingContent(el,thinking,markdown){el.innerHTML=this._renderStreamingMessage(thinking,markdown);this._typesetMath(el);this._scrollIfSticky()},
     _renderStreamingMessage(th,mt){let h='';if(th)h+='<details class="gpt-thinking-block" open><summary class="gpt-thinking-summary">Thinking</summary><div class="gpt-thinking-content">'+this._renderMarkdown(th)+'</div></details>';if(mt)h+=this._renderMarkdown(mt);return h||'<span class="gpt-typing">Thinking</span>'},
-    _insertIntoDocument(t){try{const w=document.querySelector('#write');if(w&&w.getAttribute('contenteditable')==='true'){const s=window.getSelection();if(s&&s.rangeCount>0){const r=s.getRangeAt(0);r.collapse(false);const n=document.createTextNode('\n\n'+t);r.insertNode(n);const nr=document.createRange();nr.setStartAfter(n);nr.collapse(true);s.removeAllRanges();s.addRange(nr);return}}navigator.clipboard.writeText(t)}catch(e){navigator.clipboard.writeText(t)}},
+    _insertIntoDocument(t){
+        const text=String(t||'');
+        const writeEl=document.querySelector('#write');
+        try{
+            let range=this._editorRange;
+            const selection=window.getSelection();
+            if((!range||!writeEl||!writeEl.contains(range.commonAncestorContainer))&&selection&&selection.rangeCount){
+                const candidate=selection.getRangeAt(0);
+                if(writeEl&&writeEl.contains(candidate.commonAncestorContainer))range=candidate.cloneRange();
+            }
+            if(writeEl&&writeEl.getAttribute('contenteditable')==='true'&&range&&writeEl.contains(range.commonAncestorContainer)){
+                writeEl.focus();
+                const insertion='\n\n'+text;
+                range.collapse(false);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                if(!document.execCommand('insertText',false,insertion)){
+                    const node=document.createTextNode(insertion);
+                    range.insertNode(node);
+                    range.setStartAfter(node);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                }
+                this._editorRange=selection.rangeCount?selection.getRangeAt(0).cloneRange():null;
+                this._clearSelectionRef();
+                return true;
+            }
+            navigator.clipboard.writeText(text);
+            this._clearSelectionRef();
+            this._notify('No editor cursor found. Copied the response instead.','warn');
+        }catch(e){navigator.clipboard.writeText(text);this._clearSelectionRef();this._notify('Insert failed. Copied the response instead.','warn')}
+        return false;
+    },
     async sendMessage(){
         const input=this.inputField.value.trim();
         if((!input&&!this.pendingAttachments.length&&!this._selectedRef)||this.isStreaming)return;
@@ -196,9 +230,9 @@ const UIModule = {
     _isNearBottom(){if(!this.messagesContainer)return true;return this.messagesContainer.scrollHeight-this.messagesContainer.scrollTop-this.messagesContainer.clientHeight<48},
     _scrollToBottom(){if(this.messagesContainer){this.messagesContainer.scrollTop=this.messagesContainer.scrollHeight;this._stickToBottom=true}},
     _scrollIfSticky(){if(this._stickToBottom)this._scrollToBottom()},
-    openSettings(){document.getElementById('gpt-settings-modal').classList.remove('gpt-hidden');const s=this.llm.getSettings();document.getElementById('gpt-setting-provider').value=s.provider||'openai';document.getElementById('gpt-setting-apikey').value=s.apiKey||'';document.getElementById('gpt-setting-endpoint').value=s.endpoint||'';document.getElementById('gpt-setting-model').value=s.model||'';document.getElementById('gpt-setting-temperature').value=s.temperature??0.7;document.getElementById('gpt-temp-value').textContent=s.temperature??0.7;document.getElementById('gpt-setting-maxtokens').value=s.maxTokens||4096;document.getElementById('gpt-setting-maxcontexttokens').value=s.maxContextTokens||'';this._syncToolPermissionUI();document.getElementById('gpt-setting-enablethinking').checked=s.enableThinking||false;document.getElementById('gpt-thinking-options').classList.toggle('gpt-hidden',!s.enableThinking);document.getElementById('gpt-setting-thinkingeffort').value=s.thinkingEffort||'medium';document.getElementById('gpt-setting-systemprompt').value=s.systemPrompt||'';this._refreshContextWindowLabel();this._renderMCPList()},
+    openSettings(){document.getElementById('gpt-settings-modal').classList.remove('gpt-hidden');const s=this.llm.getSettings();document.getElementById('gpt-setting-provider').value=s.provider||'openai';document.getElementById('gpt-setting-apikey').value=s.apiKey||'';document.getElementById('gpt-setting-endpoint').value=s.endpoint||'';document.getElementById('gpt-setting-model').value=s.model||'';document.getElementById('gpt-setting-temperature').value=s.temperature??0.7;document.getElementById('gpt-temp-value').textContent=s.temperature??0.7;document.getElementById('gpt-setting-maxtokens').value=s.maxTokens||4096;document.getElementById('gpt-setting-maxcontexttokens').value=s.maxContextTokens||'';this._syncToolPermissionUI();document.getElementById('gpt-setting-enablethinking').checked=s.enableThinking||false;document.getElementById('gpt-thinking-options').classList.toggle('gpt-hidden',!s.enableThinking);document.getElementById('gpt-setting-autoopenselection').checked=s.autoOpenOnSelection!==false;document.getElementById('gpt-setting-thinkingeffort').value=s.thinkingEffort||'medium';document.getElementById('gpt-setting-systemprompt').value=s.systemPrompt||'';this._refreshContextWindowLabel();this._renderMCPList()},
     closeSettings(){document.getElementById('gpt-settings-modal').classList.add('gpt-hidden');document.getElementById('gpt-test-result').classList.add('gpt-hidden')},
-    saveSettings(silent){const old=this.llm.getSettings();const model=document.getElementById('gpt-setting-model').value;const manualContext=parseInt(document.getElementById('gpt-setting-maxcontexttokens').value);const s={...old,provider:document.getElementById('gpt-setting-provider').value,apiKey:document.getElementById('gpt-setting-apikey').value,endpoint:document.getElementById('gpt-setting-endpoint').value,model,temperature:parseFloat(document.getElementById('gpt-setting-temperature').value),maxTokens:parseInt(document.getElementById('gpt-setting-maxtokens').value),enableThinking:document.getElementById('gpt-setting-enablethinking').checked,thinkingEffort:document.getElementById('gpt-setting-thinkingeffort').value,systemPrompt:document.getElementById('gpt-setting-systemprompt').value};if(manualContext)s.maxContextTokens=manualContext;else delete s.maxContextTokens;if(s.modelCapsById&&s.modelCapsById[model])s.modelCapabilities=s.modelCapsById[model];else if(!s.modelCapabilities||s.modelCapabilities.id!==model)s.modelCapabilities={id:model,...this.llm.inferModelCapabilities(model)};this.llm.saveSettings(s);this._refreshContextWindowLabel();if(!silent){const r=document.getElementById('gpt-test-result');r.classList.remove('gpt-hidden');r.className='gpt-test-result gpt-test-success';r.textContent='Saved';setTimeout(()=>r.classList.add('gpt-hidden'),1800)}return s},
+    saveSettings(silent){const old=this.llm.getSettings();const model=document.getElementById('gpt-setting-model').value;const manualContext=parseInt(document.getElementById('gpt-setting-maxcontexttokens').value);const s={...old,provider:document.getElementById('gpt-setting-provider').value,apiKey:document.getElementById('gpt-setting-apikey').value,endpoint:document.getElementById('gpt-setting-endpoint').value,model,temperature:parseFloat(document.getElementById('gpt-setting-temperature').value),maxTokens:parseInt(document.getElementById('gpt-setting-maxtokens').value),enableThinking:document.getElementById('gpt-setting-enablethinking').checked,autoOpenOnSelection:document.getElementById('gpt-setting-autoopenselection').checked,thinkingEffort:document.getElementById('gpt-setting-thinkingeffort').value,systemPrompt:document.getElementById('gpt-setting-systemprompt').value};if(manualContext)s.maxContextTokens=manualContext;else delete s.maxContextTokens;if(s.modelCapsById&&s.modelCapsById[model])s.modelCapabilities=s.modelCapsById[model];else if(!s.modelCapabilities||s.modelCapabilities.id!==model)s.modelCapabilities={id:model,...this.llm.inferModelCapabilities(model)};this.llm.saveSettings(s);this._refreshContextWindowLabel();if(!silent){const r=document.getElementById('gpt-test-result');r.classList.remove('gpt-hidden');r.className='gpt-test-result gpt-test-success';r.textContent='Saved';setTimeout(()=>r.classList.add('gpt-hidden'),1800)}return s},
     async testConnection(){this.saveSettings(true);const r=document.getElementById('gpt-test-result');r.classList.remove('gpt-hidden');r.className='gpt-test-result gpt-test-testing';r.textContent='Testing...';const res=await this.llm.testConnection();r.className=res.success?'gpt-test-result gpt-test-success':'gpt-test-result gpt-test-error';r.textContent=res.success?res.message:'Failed: '+res.message},
     async fetchModels(){this.saveSettings(true);const r=document.getElementById('gpt-test-result'),ml=document.getElementById('gpt-model-list'),fb=document.getElementById('gpt-fetch-models');r.classList.remove('gpt-hidden');r.className='gpt-test-result gpt-test-testing';r.textContent='Fetching...';fb.disabled=true;const res=await this.llm.fetchModels();let cap=null;try{cap=await this.llm.fetchCurrentModelCapabilities()}catch(e){}fb.disabled=false;if(res.success){const settings=this.llm.getSettings();settings.modelCapsById=res.modelCaps||{};if(cap)settings.modelCapabilities=cap;this.llm.saveSettings(settings);r.className='gpt-test-result gpt-test-success';r.textContent=res.message+(cap?' · context '+this._formatTokens(cap.contextWindow):'');ml.innerHTML='<option value="">-- Select --</option>';res.models.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m;ml.appendChild(o)});ml.classList.remove('gpt-hidden');this._refreshContextWindowLabel()}else{r.className='gpt-test-result gpt-test-error';r.textContent=res.message;ml.classList.add('gpt-hidden')}},
     newConversation(){window.TyporaGPT.History.create();this.clearMessages()},
@@ -245,6 +279,7 @@ const UIModule = {
         // Only show if selection is in the editor area
         const writeEl=document.querySelector('#write');
         if(writeEl&&writeEl.contains(sel.anchorNode)){
+            this._editorRange=sel.rangeCount?sel.getRangeAt(0).cloneRange():null;
             this._selectedRef=text;
             this._showSelectionRef(text);
         } else this._clearSelectionRef();
@@ -256,8 +291,8 @@ const UIModule = {
         const truncated=text.length>200?text.substring(0,200)+'...':text;
         content.textContent=truncated;
         ref.classList.remove('gpt-hidden');
-        // Auto-open sidebar if closed
-        if(this.sidebar&&!this.sidebar.classList.contains('gpt-open'))this.toggle();
+        // Auto-open sidebar if enabled (the historical default is enabled).
+        if(this.llm.getSettings().autoOpenOnSelection!==false&&this.sidebar&&!this.sidebar.classList.contains('gpt-open'))this.toggle();
     },
     _clearSelectionRef(){
         this._selectedRef='';
