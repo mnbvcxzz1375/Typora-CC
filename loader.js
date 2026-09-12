@@ -8,24 +8,29 @@
  * 3. Initializing the plugin
  *
  * Installation: Add this script tag to the end of window.html's <body>:
- *   <script src="file:///E:/VScodeProject/Typora-GPT/loader.js"></script>
+ *   <script src="./typora-gpt/loader.js"></script>
  */
 
 (function () {
     'use strict';
 
-    // Plugin base path - the directory containing this loader.js
+    // Plugin base path - the directory containing this loader.js.
+    // document.currentScript is the reliable path for standard manual installs.
     const PLUGIN_BASE = (function () {
-        // Get the path of this script
+        const current = document.currentScript;
+        if (current && current.src) {
+            return current.src.substring(0, current.src.lastIndexOf('/') + 1);
+        }
+
+        // Fallback for environments that do not populate document.currentScript.
         const scripts = document.querySelectorAll('script[src]');
         for (const script of scripts) {
             const src = script.src || script.getAttribute('src') || '';
-            if (src.includes('loader.js') && src.includes('Typora-GPT')) {
+            if (/loader\.js(?:[?#].*)?$/i.test(src) && /typora-(?:gpt|cc)/i.test(src)) {
                 return src.substring(0, src.lastIndexOf('/') + 1);
             }
         }
-        // Fallback: known path
-        return 'file:///E:/VScodeProject/Typora-GPT/';
+        return './typora-gpt/';
     })();
 
     // Set global base path for CSS loading
